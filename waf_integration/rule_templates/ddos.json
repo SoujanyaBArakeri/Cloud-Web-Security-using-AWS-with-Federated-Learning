@@ -1,0 +1,69 @@
+{
+  "name": "FL_DDoS_Template",
+  "description": "Template for DDoS and rate limiting rules",
+  "rate_limits": [
+    {
+      "name": "general_rate_limit",
+      "description": "General rate limit for all traffic",
+      "limit": 2000,
+      "window_seconds": 300,
+      "aggregate_key": "IP",
+      "action": "BLOCK"
+    },
+    {
+      "name": "login_rate_limit",
+      "description": "Rate limit for login endpoints",
+      "limit": 10,
+      "window_seconds": 300,
+      "aggregate_key": "IP",
+      "scope_down": {
+        "uri_path": "/api/login"
+      },
+      "action": "BLOCK"
+    },
+    {
+      "name": "api_rate_limit",
+      "description": "Rate limit for API endpoints",
+      "limit": 500,
+      "window_seconds": 60,
+      "aggregate_key": "IP",
+      "scope_down": {
+        "uri_path_prefix": "/api/"
+      },
+      "action": "BLOCK"
+    }
+  ],
+  "suspicious_patterns": [
+    {
+      "pattern": "identical_requests",
+      "description": "Detect identical repeated requests",
+      "threshold": 100,
+      "window_seconds": 60,
+      "confidence_boost": 0.3
+    },
+    {
+      "pattern": "no_user_agent",
+      "description": "Requests without User-Agent header",
+      "confidence_boost": 0.2
+    },
+    {
+      "pattern": "known_bot_ua",
+      "description": "Known bad bot user agents",
+      "user_agents": [
+        "python-requests",
+        "curl",
+        "wget",
+        "Go-http-client"
+      ],
+      "confidence_boost": 0.1
+    }
+  ],
+  "default_action": "COUNT",
+  "escalation_rules": {
+    "sustained_high_traffic": {
+      "threshold_multiplier": 2,
+      "duration_minutes": 5,
+      "action": "BLOCK"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "FL_SQLInjection_Template",
+  "description": "Template for SQL injection detection rules",
+  "patterns": [
+    {
+      "pattern": "SELECT.*FROM",
+      "confidence_boost": 0.2,
+      "severity": "high"
+    },
+    {
+      "pattern": "UNION.*SELECT",
+      "confidence_boost": 0.3,
+      "severity": "high"
+    },
+    {
+      "pattern": "INSERT.*INTO",
+      "confidence_boost": 0.2,
+      "severity": "high"
+    },
+    {
+      "pattern": "DELETE.*FROM",
+      "confidence_boost": 0.2,
+      "severity": "high"
+    },
+    {
+      "pattern": "DROP.*TABLE",
+      "confidence_boost": 0.4,
+      "severity": "critical"
+    },
+    {
+      "pattern": "OR.*=.*",
+      "confidence_boost": 0.1,
+      "severity": "medium"
+    },
+    {
+      "pattern": "AND.*=.*",
+      "confidence_boost": 0.1,
+      "severity": "medium"
+    },
+    {
+      "pattern": "--",
+      "confidence_boost": 0.15,
+      "severity": "medium"
+    },
+    {
+      "pattern": ";",
+      "confidence_boost": 0.05,
+      "severity": "low"
+    }
+  ],
+  "field_to_match": {
+    "primary": "body",
+    "secondary": ["query_string", "uri_path"]
+  },
+  "text_transformations": [
+    "URL_DECODE",
+    "LOWERCASE",
+    "HTML_ENTITY_DECODE"
+  ],
+  "default_action": "COUNT",
+  "high_confidence_action": "BLOCK",
+  "confidence_threshold": 0.85
+}

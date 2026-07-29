@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # Main web application (protected by WAF)
+  web_app:
+    build:
+      context: ./web_application
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - LOG_REQUESTS=true
+      - LOG_DIR=/app/data/logs
+      - FL_SERVER_HOST=fl_server
+      - FL_SERVER_PORT=8080
+    volumes:
+      - ./data/sample_traffic:/app/data/logs
+      - ./web_application:/app
+    networks:
+      - fl_network
+    depends_on:
+      - fl_server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Federated Learning Aggregation Server
+  fl_server:
+    build:
+      context: ./federated_learning
+      dockerfile: Dockerfile.server
+    ports:
+      - "8080:8080"
+    environment:
+      - FL_NUM_ROUNDS=10
+      - FL_MIN_CLIENTS=2
+      - MODEL_SAVE_PATH=/app/models
+    volumes:
+      - ./data/models:/app/models
+      - ./federated_learning:/app
+    networks:
+      - fl_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Federated Learning Client - Organization A
+  fl_client_a:
+    build:
+      context: ./federated_learning
+      dockerfile: Dockerfile.client
+    environment:
+      - ORG_ID=org_a
+      - FL_SERVER_HOST=fl_server
+      - FL_SERVER_PORT=8080
+      - DATA_PATH=/app/data
+      - LOCAL_EPOCHS=5
+    volumes:
+      - ./data/org_a:/app/data
+      - ./federated_learning:/app
+    networks:
+      - fl_network
+    depends_on:
+      - fl_server
+
+  # Federated Learning Client - Organization B
+  fl_client_b:
+    build:
+      context: ./federated_learning
+      dockerfile: Dockerfile.client
+    environment:
+      - ORG_ID=org_b
+      - FL_SERVER_HOST=fl_server
+      - FL_SERVER_PORT=8080
+      - DATA_PATH=/app/data
+      - LOCAL_EPOCHS=5
+    volumes:
+      - ./data/org_b:/app/data
+      - ./federated_learning:/app
+    networks:
+      - fl_network
+    depends_on:
+      - fl_server
+
+  # Federated Learning Client - Organization C
+  fl_client_c:
+    build:
+      context: ./federated_learning
+      dockerfile: Dockerfile.client
+    environment:
+      - ORG_ID=org_c
+      - FL_SERVER_HOST=fl_server
+      - FL_SERVER_PORT=8080
+      - DATA_PATH=/app/data
+      - LOCAL_EPOCHS=5
+    volumes:
+      - ./data/org_c:/app/data
+      - ./federated_learning:/app
+    networks:
+      - fl_network
+    depends_on:
+      - fl_server
+
+  # WAF Rule Updater Service
+  waf_updater:
+    build:
+      context: ./waf_integration
+      dockerfile: Dockerfile
+    environment:
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - WAF_WEB_ACL_ID=${WAF_WEB_ACL_ID}
+      - FL_SERVER_HOST=fl_server
+      - FL_SERVER_PORT=8080
+    volumes:
+      - ./waf_integration:/app
+    networks:
+      - fl_network
+    depends_on:
+      - fl_server
+
+networks:
+  fl_network:
+    driver: bridge
+
+volumes:
+  model_data:
+  log_data:

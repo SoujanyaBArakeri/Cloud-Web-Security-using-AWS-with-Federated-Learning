@@ -1,0 +1,78 @@
+{
+  "name": "FL_XSS_Template",
+  "description": "Template for Cross-Site Scripting detection rules",
+  "patterns": [
+    {
+      "pattern": "<script",
+      "confidence_boost": 0.4,
+      "severity": "critical"
+    },
+    {
+      "pattern": "javascript:",
+      "confidence_boost": 0.35,
+      "severity": "high"
+    },
+    {
+      "pattern": "onerror=",
+      "confidence_boost": 0.3,
+      "severity": "high"
+    },
+    {
+      "pattern": "onload=",
+      "confidence_boost": 0.3,
+      "severity": "high"
+    },
+    {
+      "pattern": "onclick=",
+      "confidence_boost": 0.25,
+      "severity": "medium"
+    },
+    {
+      "pattern": "onmouseover=",
+      "confidence_boost": 0.25,
+      "severity": "medium"
+    },
+    {
+      "pattern": "<iframe",
+      "confidence_boost": 0.3,
+      "severity": "high"
+    },
+    {
+      "pattern": "<object",
+      "confidence_boost": 0.2,
+      "severity": "medium"
+    },
+    {
+      "pattern": "<embed",
+      "confidence_boost": 0.2,
+      "severity": "medium"
+    },
+    {
+      "pattern": "alert(",
+      "confidence_boost": 0.15,
+      "severity": "medium"
+    },
+    {
+      "pattern": "document.cookie",
+      "confidence_boost": 0.35,
+      "severity": "high"
+    },
+    {
+      "pattern": "eval(",
+      "confidence_boost": 0.3,
+      "severity": "high"
+    }
+  ],
+  "field_to_match": {
+    "primary": "body",
+    "secondary": ["query_string", "single_header:referer"]
+  },
+  "text_transformations": [
+    "HTML_ENTITY_DECODE",
+    "URL_DECODE",
+    "LOWERCASE"
+  ],
+  "default_action": "COUNT",
+  "high_confidence_action": "BLOCK",
+  "confidence_threshold": 0.85
+}
